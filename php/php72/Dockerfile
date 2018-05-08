@@ -99,4 +99,25 @@ RUN apt-get update \
     #&& docker-php-ext-install ldap \
 
 # Composer
-#RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
+#RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer 
+
+# Install extension using pecl
+# Notice: if pecl install get error
+#    `No releases available for package "pecl.php.net/xxx"`
+# or
+#    `Package "xxx" does not have REST xml available`
+# Please turn on proxy (The proxy IP may be docker host IP or others):
+RUN pear config-set http_proxy http://47.93.198.182:8888
+COPY ./*.tgz /liguojian/
+RUN pecl install /liguojian/redis-4.0.2.tgz \
+    && docker-php-ext-enable redis \
+    && :\
+    && pecl install /liguojian/xdebug-2.6.0.tgz \
+    && docker-php-ext-enable xdebug \
+    && :\
+    && apt-get install -y libmemcached-dev zlib1g-dev \
+    && pecl install /liguojian/memcached-3.0.4.tgz \
+    && docker-php-ext-enable memcached \
+    && rm -rf /liguojian \
+    && curl -sS https://getcomposer.org/installer | php \
+    &&mv composer.phar /usr/local/bin/composer
